@@ -147,6 +147,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_ultimate_matches: {
+        Args: never
+        Returns: {
+          email: string
+          first_name: string
+        }[]
+      }
       profile_belongs_to_me: { Args: { pid: string }; Returns: boolean }
     }
     Enums: {

@@ -16,9 +16,10 @@ import {
   DEPARTMENTS,
   LOCATIONS,
   type Department,
-  saveUser,
-  useUser,
-} from "@/lib/nsu-store";
+  type LocationKey,
+} from "@/lib/nsu";
+import { useMyProfile, useSession } from "@/lib/nsu-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/profile")({
   head: () => ({ meta: [{ title: "Your profile — NSUMatch" }] }),
@@ -26,13 +27,13 @@ export const Route = createFileRoute("/app/profile")({
 });
 
 function ProfilePage() {
-  const [user] = useUser();
+  const { session } = useSession();
+  const { profile, refetch } = useMyProfile(session);
   const navigate = useNavigate();
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const isDark = document.documentElement.classList.contains("dark");
-    setDark(isDark);
+    setDark(document.documentElement.classList.contains("dark"));
   }, []);
 
   const toggleDark = (v: boolean) => {
@@ -40,46 +41,49 @@ function ProfilePage() {
     setDark(v);
   };
 
-  if (!user) return null;
+  if (!profile) {
+    return <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">Loading…</div>;
+  }
 
-  const updateUser = (patch: Partial<typeof user>) => saveUser({ ...user, ...patch });
+  const update = async (patch: Partial<typeof profile>) => {
+    await supabase.from("profiles").update(patch).eq("id", profile.id);
+    refetch();
+  };
 
   const toggleSlot = (s: string) => {
-    const has = user.freeSlots.includes(s);
-    updateUser({
-      freeSlots: has ? user.freeSlots.filter((x) => x !== s) : [...user.freeSlots, s],
-    });
+    const has = profile.free_slots.includes(s);
+    update({ free_slots: has ? profile.free_slots.filter((x) => x !== s) : [...profile.free_slots, s] });
   };
 
   const toggleGhost = (d: Department) => {
-    const has = user.ghostFromDepts.includes(d);
-    updateUser({
-      ghostFromDepts: has
-        ? user.ghostFromDepts.filter((x) => x !== d)
-        : [...user.ghostFromDepts, d],
+    const has = profile.ghost_from_depts.includes(d);
+    update({
+      ghost_from_depts: has
+        ? profile.ghost_from_depts.filter((x) => x !== d)
+        : [...profile.ghost_from_depts, d],
     });
   };
 
-  const logout = () => {
-    saveUser(null);
+  const logout = async () => {
+    await supabase.auth.signOut();
     navigate({ to: "/" });
   };
 
   return (
     <div className="max-w-md mx-auto px-4 pt-6 space-y-6">
       <div className="flex items-center gap-4">
-        <img src={user.photo} alt="" className="h-20 w-20 rounded-2xl object-cover" />
+        <img src={profile.photo_url} alt="" className="h-20 w-20 rounded-2xl object-cover" />
         <div>
           <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-black">
-              {user.firstName}, {user.age}
+              {profile.first_name}, {profile.age}
             </h1>
-            {user.verified && <BadgeCheck className="h-5 w-5 text-sky-500" />}
+            {profile.verified && <BadgeCheck className="h-5 w-5 text-sky-500" />}
           </div>
           <p className="text-xs text-muted-foreground">
-            {user.department} • {user.major}
+            {profile.department} • {profile.major}
           </p>
-          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{user.email}</p>
+          <p className="text-xs text-muted-foreground truncate max-w-[220px]">{profile.email}</p>
         </div>
       </div>
 
@@ -95,7 +99,10 @@ function ProfilePage() {
 
       <section className="rounded-2xl border bg-card p-4 space-y-3">
         <Label className="text-base">📍 Meet me at...</Label>
-        <Select value={user.location} onValueChange={(v) => updateUser({ location: v as never })}>
+        <Select
+          value={profile.location}
+          onValueChange={(v) => update({ location: v as LocationKey })}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -116,7 +123,7 @@ function ProfilePage() {
         </p>
         <div className="flex flex-wrap gap-2">
           {ALL_SLOTS.map((s) => {
-            const on = user.freeSlots.includes(s);
+            const on = profile.free_slots.includes(s);
             return (
               <button
                 key={s}
@@ -144,7 +151,7 @@ function ProfilePage() {
         </div>
         <div className="space-y-2">
           {DEPARTMENTS.map((d) => {
-            const on = user.ghostFromDepts.includes(d.value);
+            const on = profile.ghost_from_depts.includes(d.value);
             return (
               <div key={d.value} className="flex items-center justify-between">
                 <span className="text-sm">{d.label}</span>

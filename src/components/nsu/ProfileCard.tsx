@@ -1,14 +1,25 @@
 import { BadgeCheck } from "lucide-react";
-import { LOCATIONS, type Profile, mutualSlots, type User } from "@/lib/nsu-store";
+import { LOCATIONS, type DBProfile, mutualSlots } from "@/lib/nsu";
 
-export function ProfileCard({ profile, viewer }: { profile: Profile; viewer: User | null }) {
+export function ProfileCard({
+  profile,
+  viewer,
+}: {
+  profile: DBProfile;
+  viewer: DBProfile | null;
+}) {
   const loc = LOCATIONS.find((l) => l.key === profile.location);
-  const shared = viewer ? mutualSlots(viewer.freeSlots, profile.freeSlots) : [];
+  const shared = viewer ? mutualSlots(viewer.free_slots, profile.free_slots) : [];
 
   return (
     <div className="relative h-full w-full rounded-3xl overflow-hidden bg-card shadow-xl">
-      <img src={profile.photo} alt={profile.firstName} className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+      <img
+        src={profile.photo_url}
+        alt={profile.first_name}
+        className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+        draggable={false}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
 
       {loc && loc.key !== "none" && (
         <div className="absolute top-4 left-4 bg-black/40 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
@@ -26,7 +37,7 @@ export function ProfileCard({ profile, viewer }: { profile: Profile; viewer: Use
       <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
         <div className="flex items-center gap-2">
           <h2 className="text-3xl font-black leading-tight">
-            {profile.firstName}, {profile.age}
+            {profile.first_name}, {profile.age}
           </h2>
           {profile.verified && <BadgeCheck className="h-6 w-6 text-sky-400 fill-sky-400/20" />}
         </div>

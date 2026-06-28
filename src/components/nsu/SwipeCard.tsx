@@ -1,4 +1,4 @@
-import { useMotionValue, useTransform, motion, type PanInfo } from "motion/react";
+// Pointer-based swipe; no external animation dep.
 import { useState } from "react";
 import { Heart, X } from "lucide-react";
 import type { DBProfile } from "@/lib/nsu";
@@ -91,8 +91,3 @@ export function SwipeCard({ profile, viewer, onSwipe, isTop, depth }: Props) {
   );
 }
 
-// Silence unused imports if motion isn't installed.
-void useMotionValue;
-void useTransform;
-void motion;
-export type { PanInfo };

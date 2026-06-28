@@ -1,32 +1,57 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ImagePlus, Send, ShieldAlert, Sparkles } from "lucide-react";
-import { getProfileById, ICEBREAKERS, useAppState } from "@/lib/nsu-store";
 import { Button } from "@/components/ui/button";
+import { ICEBREAKERS, type DBProfile } from "@/lib/nsu";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/chat/$id")({
   head: () => ({ meta: [{ title: "Chat — NSUMatch" }] }),
   component: Chat,
 });
 
+type Msg = { from: "me" | "them"; text: string; at: number };
+const LS_PREFIX = "nsumatch:chat:";
+
 function Chat() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const profile = getProfileById(id);
-  const [state, setState] = useAppState();
+  const [profile, setProfile] = useState<DBProfile | null>(null);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const messages = state.messages[id] ?? [];
 
   useEffect(() => {
-    if (!profile) navigate({ to: "/app/matches" });
-  }, [profile, navigate]);
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) navigate({ to: "/app/matches" });
+        else setProfile(data as DBProfile);
+      });
+  }, [id, navigate]);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_PREFIX + id);
+      setMessages(raw ? (JSON.parse(raw) as Msg[]) : []);
+    } catch {
+      setMessages([]);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_PREFIX + id, JSON.stringify(messages));
+    } catch {
+      // ignore
+    }
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages.length]);
+  }, [messages, id]);
 
-  // Block screenshots (simulated visual guardrail)
+  // Block screenshots (best-effort visual guardrail)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "PrintScreen") {
@@ -38,46 +63,29 @@ function Chat() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  if (!profile) return null;
+  if (!profile) {
+    return <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">Loading…</div>;
+  }
 
   const send = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    setState((s) => {
-      const prev = s.messages[id] ?? [];
-      const next = [
-        ...prev,
-        { from: "me" as const, text: trimmed, at: Date.now() },
-      ];
-      return { ...s, messages: { ...s.messages, [id]: next } };
-    });
+    setMessages((prev) => [...prev, { from: "me", text: trimmed, at: Date.now() }]);
     setDraft("");
-    // demo: auto reply
     setTimeout(() => {
-      setState((s) => {
-        const prev = s.messages[id] ?? [];
-        return {
-          ...s,
-          messages: {
-            ...s.messages,
-            [id]: [
-              ...prev,
-              {
-                from: "them" as const,
-                text: "haha, only an NSU student would ask that 😄",
-                at: Date.now(),
-              },
-            ],
-          },
-        };
-      });
+      setMessages((prev) => [
+        ...prev,
+        {
+          from: "them",
+          text: "haha, only an NSU student would ask that 😄",
+          at: Date.now(),
+        },
+      ]);
     }, 1200);
   };
 
-  const generateIcebreaker = () => {
-    const text = ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
-    setDraft(text);
-  };
+  const generateIcebreaker = () =>
+    setDraft(ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)]);
 
   return (
     <div className="flex flex-col h-screen pb-20 select-none">
@@ -89,9 +97,9 @@ function Chat() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <img src={profile.photo} alt="" className="h-10 w-10 rounded-full object-cover" />
+        <img src={profile.photo_url} alt="" className="h-10 w-10 rounded-full object-cover" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold leading-tight">{profile.firstName}</p>
+          <p className="font-semibold leading-tight">{profile.first_name}</p>
           <p className="text-[11px] text-muted-foreground">
             {profile.department} • {profile.major}
           </p>
@@ -106,7 +114,7 @@ function Chat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
         {messages.length === 0 && (
           <div className="text-center text-sm text-muted-foreground mt-10">
-            Say hi to {profile.firstName}. Try an NSU icebreaker 👇
+            Say hi to {profile.first_name}. Try an NSU icebreaker 👇
           </div>
         )}
         {messages.map((m, i) => (
@@ -124,12 +132,7 @@ function Chat() {
       </div>
 
       <div className="px-3 pt-2 pb-3 border-t border-border bg-card space-y-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={generateIcebreaker}
-          className="text-xs"
-        >
+        <Button variant="outline" size="sm" onClick={generateIcebreaker} className="text-xs">
           <Sparkles className="h-3.5 w-3.5" /> NSU icebreaker
         </Button>
         <form
@@ -150,7 +153,7 @@ function Chat() {
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={`Message ${profile.firstName}`}
+            placeholder={`Message ${profile.first_name}`}
             className="flex-1 h-10 px-4 rounded-full bg-muted text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <button

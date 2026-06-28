@@ -1,50 +1,86 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Heart, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MOCK_PROFILES, NSU_EMAIL_REGEX, useAppState, useUser } from "@/lib/nsu-store";
+import { NSU_EMAIL_REGEX } from "@/lib/nsu";
+import { useMyProfile, useSession } from "@/lib/nsu-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/crush")({
   head: () => ({ meta: [{ title: "Crush List — NSUMatch" }] }),
   component: CrushList,
 });
 
+type Crush = { id: string; target_email: string };
+
 function CrushList() {
-  const [user] = useUser();
-  const [state, setState] = useAppState();
+  const { session } = useSession();
+  const { profile: me } = useMyProfile(session);
+  const [crushes, setCrushes] = useState<Crush[]>([]);
+  const [ultimateMatches, setUltimateMatches] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const add = () => {
+  const refetch = useCallback(async () => {
+    if (!me) return;
+    const { data } = await supabase
+      .from("crushes")
+      .select("id,target_email")
+      .eq("owner_profile_id", me.id);
+    setCrushes((data as Crush[]) ?? []);
+
+    // Ultimate match detection: target user has me on their crush list
+    if (data && data.length) {
+      const { data: reciprocal } = await supabase
+        .from("crushes")
+        .select("owner_profile_id,profiles!crushes_owner_profile_id_fkey(email,first_name)")
+        .eq("target_email", me.email)
+        .in("target_email", [me.email]);
+      // Find owners whose email matches one of my targets
+      const myTargets = new Set(data.map((c) => c.target_email.toLowerCase()));
+      const matches: string[] = [];
+      (reciprocal ?? []).forEach((row) => {
+        const ownerEmail = (row as { profiles: { email?: string; first_name?: string } | null })
+          .profiles?.email;
+        const ownerName = (row as { profiles: { email?: string; first_name?: string } | null })
+          .profiles?.first_name;
+        if (ownerEmail && myTargets.has(ownerEmail.toLowerCase())) {
+          matches.push(ownerName || ownerEmail);
+        }
+      });
+      setUltimateMatches(matches);
+    } else {
+      setUltimateMatches([]);
+    }
+  }, [me?.id, me?.email]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  const add = async () => {
+    if (!me) return;
     const v = input.trim().toLowerCase();
-    if (!v) return;
-    const isEmail = v.includes("@");
-    if (isEmail && !NSU_EMAIL_REGEX.test(v)) {
-      setError("Only @northsouth.edu emails are allowed.");
-      return;
-    }
-    if (state.crushEmails.includes(v)) {
-      setError("Already on your list.");
-      return;
-    }
-    if (state.crushEmails.length >= 3) {
-      setError("Crush List is limited to 3 entries.");
-      return;
-    }
     setError(null);
-    setState((s) => ({ ...s, crushEmails: [...s.crushEmails, v] }));
+    if (!NSU_EMAIL_REGEX.test(v)) return setError("Use an @northsouth.edu email.");
+    if (v === me.email.toLowerCase()) return setError("That's you 😅");
+    if (crushes.length >= 3) return setError("Crush List is limited to 3 entries.");
+    const { error } = await supabase
+      .from("crushes")
+      .insert({ owner_profile_id: me.id, target_email: v });
+    if (error) {
+      setError(/duplicate/i.test(error.message) ? "Already on your list." : error.message);
+      return;
+    }
     setInput("");
+    refetch();
   };
 
-  const remove = (v: string) =>
-    setState((s) => ({ ...s, crushEmails: s.crushEmails.filter((x) => x !== v) }));
-
-  // demo ultimate-match detector: if a mock profile matches the email AND is in matches
-  const ultimate = state.crushEmails
-    .map((entry) => MOCK_PROFILES.find((p) => p.email.toLowerCase() === entry))
-    .filter(Boolean)
-    .filter((p) => state.matches.includes(p!.id));
+  const remove = async (id: string) => {
+    await supabase.from("crushes").delete().eq("id", id);
+    refetch();
+  };
 
   return (
     <div className="max-w-md mx-auto px-4 pt-6">
@@ -60,26 +96,26 @@ function CrushList() {
         </div>
         <div className="flex gap-2">
           <Input
-            placeholder="name@northsouth.edu or full name"
+            placeholder="name@northsouth.edu"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
           />
-          <Button onClick={add} disabled={state.crushEmails.length >= 3}>
+          <Button onClick={add} disabled={crushes.length >= 3}>
             Add
           </Button>
         </div>
         {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
 
         <ul className="mt-4 space-y-2">
-          {state.crushEmails.map((c) => (
+          {crushes.map((c) => (
             <li
-              key={c}
+              key={c.id}
               className="flex items-center justify-between text-sm bg-muted rounded-xl px-3 py-2"
             >
-              <span className="truncate">{c}</span>
+              <span className="truncate">{c.target_email}</span>
               <button
-                onClick={() => remove(c)}
+                onClick={() => remove(c.id)}
                 className="h-7 w-7 grid place-items-center rounded-full hover:bg-background"
                 aria-label="Remove"
               >
@@ -87,7 +123,7 @@ function CrushList() {
               </button>
             </li>
           ))}
-          {state.crushEmails.length === 0 && (
+          {crushes.length === 0 && (
             <li className="text-xs text-muted-foreground text-center py-4">
               Your list is empty. Be brave.
             </li>
@@ -95,16 +131,14 @@ function CrushList() {
         </ul>
       </div>
 
-      {ultimate.length > 0 && (
+      {ultimateMatches.length > 0 && (
         <div className="mt-6 p-4 rounded-2xl nsu-gradient text-navy-foreground">
           <div className="flex items-center gap-2 font-bold">
             <Heart className="h-4 w-4 fill-current" /> Ultimate Match!
           </div>
           <ul className="mt-2 text-sm">
-            {ultimate.map((p) => (
-              <li key={p!.id}>
-                {p!.firstName} from {p!.department} added you back.
-              </li>
+            {ultimateMatches.map((name, i) => (
+              <li key={i}>{name} added you back.</li>
             ))}
           </ul>
         </div>

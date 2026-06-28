@@ -15,11 +15,9 @@ import {
   ALL_SLOTS,
   DEPARTMENTS,
   type Department,
-  NSU_EMAIL_REGEX,
-  saveUser,
-  type User,
-} from "@/lib/nsu-store";
+} from "@/lib/nsu";
 import { Camera, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Get verified — NSUMatch" }] }),
@@ -36,7 +34,7 @@ const PHOTO_OPTIONS = [
 function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [age, setAge] = useState("");
   const [bio, setBio] = useState("");
@@ -45,33 +43,43 @@ function Onboarding() {
   const [photo, setPhoto] = useState(PHOTO_OPTIONS[0]);
   const [idUploaded, setIdUploaded] = useState(false);
   const [slots, setSlots] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const pending = sessionStorage.getItem("nsumatch:pending-email") ?? "";
-    if (!NSU_EMAIL_REGEX.test(pending)) {
-      navigate({ to: "/" });
-      return;
-    }
-    setEmail(pending);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        navigate({ to: "/auth" });
+        return;
+      }
+      setUserId(data.session.user.id);
+    });
   }, [navigate]);
 
-  const finish = () => {
-    const user: User = {
-      id: "me",
-      email,
-      firstName: firstName.trim() || "Student",
-      age: Number(age) || 20,
-      bio: bio.trim() || "New on NSUMatch.",
-      department: (department || "SBE") as Department,
-      major: major.trim() || "Undeclared",
-      photo,
-      verified: true, // demo: auto-verified post-upload
-      freeSlots: slots,
-      location: "none",
-      ghostFromDepts: [],
-      idCardPhoto: idUploaded ? "uploaded" : undefined,
-    };
-    saveUser(user);
+  const finish = async () => {
+    if (!userId) return;
+    setSaving(true);
+    setError(null);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        first_name: firstName.trim() || "Student",
+        age: Number(age) || 18,
+        bio: bio.trim() || "New on NSUMatch.",
+        department: department || "SBE",
+        major: major.trim() || "Undeclared",
+        photo_url: photo,
+        free_slots: slots,
+        id_card_uploaded: idUploaded,
+        verified: idUploaded, // demo auto-verify after ID upload
+        onboarding_complete: true,
+      })
+      .eq("user_id", userId);
+    setSaving(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
     navigate({ to: "/app" });
   };
 
@@ -79,8 +87,7 @@ function Onboarding() {
     if (step === 1) return firstName.trim() && Number(age) >= 17 && bio.trim().length > 0;
     if (step === 2) return department && major.trim().length > 0;
     if (step === 3) return idUploaded;
-    if (step === 4) return true;
-    return false;
+    return true;
   };
 
   const toggleSlot = (s: string) =>
@@ -88,7 +95,7 @@ function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-6 pt-6">
+      <header className="px-6 pt-6 max-w-md mx-auto w-full">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg nsu-gradient text-navy-foreground grid place-items-center font-black">
             N
@@ -99,9 +106,7 @@ function Onboarding() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full ${
-                i <= step ? "bg-primary" : "bg-muted"
-              }`}
+              className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-muted"}`}
             />
           ))}
         </div>
@@ -252,8 +257,8 @@ function Onboarding() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold">You're all set 🎉</h2>
             <p className="text-sm text-muted-foreground">
-              We'll cross-check your ID with your profile. In the demo, you're auto-verified so you
-              can explore.
+              We'll cross-check your ID with your profile. Once approved by an admin, you'll get the
+              blue verified badge.
             </p>
             <div className="rounded-2xl border bg-card p-4 flex gap-3">
               <img src={photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
@@ -264,9 +269,9 @@ function Onboarding() {
                 <p className="text-muted-foreground">
                   {department || "—"} • {major || "—"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 truncate">{email}</p>
               </div>
             </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </section>
         )}
       </main>
@@ -282,8 +287,12 @@ function Onboarding() {
             Continue
           </Button>
         ) : (
-          <Button className="flex-1 bg-gold text-gold-foreground hover:bg-gold/90" onClick={finish}>
-            Enter NSUMatch
+          <Button
+            className="flex-1 bg-gold text-gold-foreground hover:bg-gold/90"
+            onClick={finish}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Enter NSUMatch"}
           </Button>
         )}
       </footer>

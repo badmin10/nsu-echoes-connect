@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { NSU_EMAIL_REGEX, loadUser } from "@/lib/nsu-store";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -11,7 +10,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Campus-only dating for North South University students. Verified .edu sign-in, free-slot matching, and tong-tea-grade vibes.",
+          "Verified students of North South University only. Match on free slots, campus check-ins, and good vibes.",
       },
       { property: "og:title", content: "NSUMatch — Dating, exclusively for NSU" },
       {
@@ -25,25 +24,18 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
 
-  const handleContinue = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = email.trim();
-    if (!NSU_EMAIL_REGEX.test(trimmed)) {
-      setError("Only @northsouth.edu emails can sign up.");
-      return;
-    }
-    setError(null);
-    sessionStorage.setItem("nsumatch:pending-email", trimmed);
-    const existing = loadUser();
-    if (existing && existing.email.toLowerCase() === trimmed.toLowerCase()) {
-      navigate({ to: "/app" });
-    } else {
-      navigate({ to: "/onboarding" });
-    }
-  };
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/app" });
+      else setChecking(false);
+    });
+  }, [navigate]);
+
+  if (checking) {
+    return <div className="min-h-screen grid place-items-center text-sm opacity-70">Loading…</div>;
+  }
 
   return (
     <div className="min-h-screen nsu-gradient text-navy-foreground flex flex-col">
@@ -60,40 +52,35 @@ function Landing() {
       </header>
 
       <main className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
-        <h1 className="text-4xl font-black leading-tight tracking-tight">
+        <h1 className="text-5xl font-black leading-[1.05] tracking-tight">
           Dating, <span className="text-gold">exclusively</span> for NSU.
         </h1>
-        <p className="mt-3 text-sm opacity-80">
-          Verified students only. Skip the random apps — find someone who actually shares your free
-          slot and your favorite tong.
+        <p className="mt-4 text-base opacity-85 leading-relaxed">
+          Verified students only. Skip random apps — find someone who actually shares your free slot
+          and your favorite tong.
         </p>
 
-        <form onSubmit={handleContinue} className="mt-8 space-y-3">
-          <label className="text-xs uppercase tracking-wider opacity-70" htmlFor="email">
-            Your NSU email
-          </label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="yourname@northsouth.edu"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="bg-white/10 border-white/20 placeholder:text-white/50 text-white h-12"
-            autoComplete="email"
-          />
-          {error && <p className="text-sm text-destructive-foreground bg-destructive/80 rounded-md px-3 py-2">{error}</p>}
+        <div className="mt-8 flex flex-col gap-3">
           <Button
-            type="submit"
-            className="w-full h-12 bg-gold text-gold-foreground hover:bg-gold/90 gold-glow font-semibold"
+            asChild
+            className="h-12 bg-gold text-gold-foreground hover:bg-gold/90 gold-glow font-semibold"
           >
-            Continue
+            <Link to="/auth">Create your account</Link>
           </Button>
-        </form>
+          <Button
+            asChild
+            variant="outline"
+            className="h-12 bg-white/10 border-white/30 text-white hover:bg-white/20"
+          >
+            <Link to="/auth">I already have an account</Link>
+          </Button>
+        </div>
 
         <ul className="mt-10 space-y-2 text-sm opacity-90">
-          <li>✓ .edu verified — no outsiders, no bots</li>
+          <li>✓ @northsouth.edu verification + email confirmation</li>
           <li>✓ Free-slot matcher, campus check-ins, Crush List</li>
           <li>✓ Ghost Mode to hide from your own department</li>
+          <li>✓ Screenshot guard in chats — privacy by default</li>
         </ul>
       </main>
 

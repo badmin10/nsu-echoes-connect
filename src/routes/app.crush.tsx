@@ -24,36 +24,18 @@ function CrushList() {
 
   const refetch = useCallback(async () => {
     if (!me) return;
-    const { data } = await supabase
-      .from("crushes")
-      .select("id,target_email")
-      .eq("owner_profile_id", me.id);
-    setCrushes((data as Crush[]) ?? []);
-
-    // Ultimate match detection: target user has me on their crush list
-    if (data && data.length) {
-      const { data: reciprocal } = await supabase
+    const [{ data }, { data: rpc }] = await Promise.all([
+      supabase
         .from("crushes")
-        .select("owner_profile_id,profiles!crushes_owner_profile_id_fkey(email,first_name)")
-        .eq("target_email", me.email)
-        .in("target_email", [me.email]);
-      // Find owners whose email matches one of my targets
-      const myTargets = new Set(data.map((c) => c.target_email.toLowerCase()));
-      const matches: string[] = [];
-      (reciprocal ?? []).forEach((row) => {
-        const ownerEmail = (row as { profiles: { email?: string; first_name?: string } | null })
-          .profiles?.email;
-        const ownerName = (row as { profiles: { email?: string; first_name?: string } | null })
-          .profiles?.first_name;
-        if (ownerEmail && myTargets.has(ownerEmail.toLowerCase())) {
-          matches.push(ownerName || ownerEmail);
-        }
-      });
-      setUltimateMatches(matches);
-    } else {
-      setUltimateMatches([]);
-    }
-  }, [me?.id, me?.email]);
+        .select("id,target_email")
+        .eq("owner_profile_id", me.id),
+      supabase.rpc("get_ultimate_matches"),
+    ]);
+    setCrushes((data as Crush[]) ?? []);
+    setUltimateMatches(
+      ((rpc as { first_name: string }[] | null) ?? []).map((r) => r.first_name),
+    );
+  }, [me?.id]);
 
   useEffect(() => {
     refetch();

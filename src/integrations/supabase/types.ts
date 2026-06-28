@@ -14,13 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      crushes: {
+        Row: {
+          created_at: string
+          id: string
+          owner_profile_id: string
+          target_email: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_profile_id: string
+          target_email: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_profile_id?: string
+          target_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crushes_owner_profile_id_fkey"
+            columns: ["owner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          age: number
+          bio: string
+          created_at: string
+          department: string
+          email: string
+          first_name: string
+          free_slots: string[]
+          ghost_from_depts: string[]
+          id: string
+          id_card_uploaded: boolean
+          location: string
+          major: string
+          onboarding_complete: boolean
+          photo_url: string
+          updated_at: string
+          user_id: string | null
+          verified: boolean
+        }
+        Insert: {
+          age?: number
+          bio?: string
+          created_at?: string
+          department?: string
+          email: string
+          first_name?: string
+          free_slots?: string[]
+          ghost_from_depts?: string[]
+          id?: string
+          id_card_uploaded?: boolean
+          location?: string
+          major?: string
+          onboarding_complete?: boolean
+          photo_url?: string
+          updated_at?: string
+          user_id?: string | null
+          verified?: boolean
+        }
+        Update: {
+          age?: number
+          bio?: string
+          created_at?: string
+          department?: string
+          email?: string
+          first_name?: string
+          free_slots?: string[]
+          ghost_from_depts?: string[]
+          id?: string
+          id_card_uploaded?: boolean
+          location?: string
+          major?: string
+          onboarding_complete?: boolean
+          photo_url?: string
+          updated_at?: string
+          user_id?: string | null
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      swipes: {
+        Row: {
+          action: string
+          created_at: string
+          from_profile_id: string
+          id: string
+          to_profile_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          from_profile_id: string
+          id?: string
+          to_profile_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          from_profile_id?: string
+          id?: string
+          to_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swipes_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      profile_belongs_to_me: { Args: { pid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

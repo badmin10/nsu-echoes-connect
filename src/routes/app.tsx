@@ -7,12 +7,13 @@ export const Route = createFileRoute("/app")({
   component: AppLayout,
 });
 
-const TABS = [
+type Tab = { to: "/app" | "/app/matches" | "/app/crush" | "/app/profile"; label: string; icon: typeof Flame; exact?: boolean };
+const TABS: Tab[] = [
   { to: "/app", label: "Discover", icon: Flame, exact: true },
   { to: "/app/matches", label: "Matches", icon: MessageCircle },
   { to: "/app/crush", label: "Crush", icon: Heart },
   { to: "/app/profile", label: "You", icon: UserIcon },
-] as const;
+];
 
 function AppLayout() {
   const navigate = useNavigate();

@@ -45,7 +45,7 @@ function ProfilePage() {
     return <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">Loading…</div>;
   }
 
-  const update = async (patch: Record<string, unknown>) => {
+  const update = async (patch: Partial<typeof profile>) => {
     await supabase.from("profiles").update(patch).eq("id", profile.id);
     refetch();
   };

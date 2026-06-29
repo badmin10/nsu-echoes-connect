@@ -99,7 +99,12 @@ function Chat() {
         </Link>
         <img src={profile.photo_url} alt="" className="h-10 w-10 rounded-full object-cover" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold leading-tight">{profile.first_name}</p>
+          <p className="font-semibold leading-tight flex items-center gap-1">
+            <span>{profile.first_name}</span>
+            {profile.verified && (
+              <BadgeCheck className="h-4 w-4 text-sky-400 fill-sky-400/20" />
+            )}
+          </p>
           <p className="text-[11px] text-muted-foreground">
             {profile.department} • {profile.major}
           </p>

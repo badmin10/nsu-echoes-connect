@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ALL_SLOTS,
-  DEPARTMENTS,
-  type Department,
-} from "@/lib/nsu";
-import { Camera, Check } from "lucide-react";
+import { ALL_SLOTS, DEPARTMENTS, type Department } from "@/lib/nsu";
+import { Camera, Check, ImagePlus, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/onboarding")({
@@ -24,15 +20,13 @@ export const Route = createFileRoute("/onboarding")({
   component: Onboarding,
 });
 
-const PHOTO_OPTIONS = [
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=800&q=80",
-  "https://images.unsplash.com/photo-1545996124-0501ebae84d0?w=800&q=80",
-  "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=800&q=80",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80",
-];
+const MAX_PHOTOS = 6;
+const MIN_PHOTOS = 2;
+const MAX_BYTES = 8 * 1024 * 1024; // 8 MB per photo
 
 function Onboarding() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [userId, setUserId] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
@@ -40,7 +34,9 @@ function Onboarding() {
   const [bio, setBio] = useState("");
   const [department, setDepartment] = useState<Department | "">("");
   const [major, setMajor] = useState("");
-  const [photo, setPhoto] = useState(PHOTO_OPTIONS[0]);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [idUploaded, setIdUploaded] = useState(false);
   const [slots, setSlots] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -56,6 +52,47 @@ function Onboarding() {
     });
   }, [navigate]);
 
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || !userId) return;
+    setPhotoError(null);
+    const remaining = MAX_PHOTOS - photos.length;
+    if (remaining <= 0) {
+      setPhotoError(`You can upload up to ${MAX_PHOTOS} photos.`);
+      return;
+    }
+    const picked = Array.from(files).slice(0, remaining);
+    setUploading(true);
+    const uploaded: string[] = [];
+    for (const file of picked) {
+      if (!file.type.startsWith("image/")) {
+        setPhotoError("Only image files are allowed.");
+        continue;
+      }
+      if (file.size > MAX_BYTES) {
+        setPhotoError("Each photo must be 8 MB or less.");
+        continue;
+      }
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("profile-photos")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) {
+        setPhotoError(upErr.message);
+        continue;
+      }
+      const { data: signed } = await supabase.storage
+        .from("profile-photos")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signed?.signedUrl) uploaded.push(signed.signedUrl);
+    }
+    setPhotos((p) => [...p, ...uploaded]);
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removePhoto = (url: string) => setPhotos((p) => p.filter((u) => u !== url));
+
   const finish = async () => {
     if (!userId) return;
     setSaving(true);
@@ -68,10 +105,11 @@ function Onboarding() {
         bio: bio.trim() || "New on NSUMatch.",
         department: department || "SBE",
         major: major.trim() || "Undeclared",
-        photo_url: photo,
+        photo_url: photos[0],
+        photos,
         free_slots: slots,
         id_card_uploaded: idUploaded,
-        verified: idUploaded, // demo auto-verify after ID upload
+        verified: idUploaded,
         onboarding_complete: true,
       })
       .eq("user_id", userId);
@@ -84,7 +122,13 @@ function Onboarding() {
   };
 
   const canNext = () => {
-    if (step === 1) return firstName.trim() && Number(age) >= 17 && bio.trim().length > 0;
+    if (step === 1)
+      return (
+        firstName.trim() &&
+        Number(age) >= 17 &&
+        bio.trim().length > 0 &&
+        photos.length >= MIN_PHOTOS
+      );
     if (step === 2) return department && major.trim().length > 0;
     if (step === 3) return idUploaded;
     return true;
@@ -141,21 +185,69 @@ function Onboarding() {
               />
             </div>
             <div>
-              <Label>Pick a photo</Label>
-              <div className="grid grid-cols-4 gap-2 mt-2">
-                {PHOTO_OPTIONS.map((p) => (
+              <div className="flex items-baseline justify-between">
+                <Label>
+                  Your photos <span className="text-destructive">*</span>
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {photos.length}/{MAX_PHOTOS} · min {MIN_PHOTOS}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Upload {MIN_PHOTOS}–{MAX_PHOTOS} photos from your gallery. The first photo is your main one.
+              </p>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {photos.map((p, idx) => (
+                  <div
+                    key={p}
+                    className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted"
+                  >
+                    <img src={p} alt={`Photo ${idx + 1}`} className="h-full w-full object-cover" />
+                    {idx === 0 && (
+                      <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
+                        Main
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(p)}
+                      className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/70 text-white grid place-items-center"
+                      aria-label="Remove photo"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {photos.length < MAX_PHOTOS && (
                   <button
                     type="button"
-                    key={p}
-                    onClick={() => setPhoto(p)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                      photo === p ? "border-primary" : "border-transparent"
-                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="aspect-square rounded-lg border-2 border-dashed border-border bg-muted/40 grid place-items-center text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
                   >
-                    <img src={p} alt="" className="h-full w-full object-cover" />
+                    {uploading ? (
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-6 w-6" />
+                    )}
                   </button>
-                ))}
+                )}
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleFiles(e.target.files)}
+              />
+              {photoError && <p className="mt-2 text-xs text-destructive">{photoError}</p>}
+              {photos.length < MIN_PHOTOS && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Add at least {MIN_PHOTOS - photos.length} more photo
+                  {MIN_PHOTOS - photos.length === 1 ? "" : "s"} to continue.
+                </p>
+              )}
             </div>
           </section>
         )}
@@ -261,7 +353,9 @@ function Onboarding() {
               blue verified badge.
             </p>
             <div className="rounded-2xl border bg-card p-4 flex gap-3">
-              <img src={photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
+              {photos[0] && (
+                <img src={photos[0]} alt="" className="h-16 w-16 rounded-xl object-cover" />
+              )}
               <div className="text-sm">
                 <p className="font-semibold">
                   {firstName || "Student"}, {age || "—"}
@@ -269,6 +363,7 @@ function Onboarding() {
                 <p className="text-muted-foreground">
                   {department || "—"} • {major || "—"}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">{photos.length} photos</p>
               </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}

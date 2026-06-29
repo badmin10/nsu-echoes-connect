@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { BadgeCheck, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyProfile, useSession } from "@/lib/nsu-auth";
 import type { DBProfile } from "@/lib/nsu";
@@ -79,8 +79,11 @@ function Matches() {
                 <img src={m.photo_url} alt="" className="h-14 w-14 rounded-xl object-cover" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold">
-                      {m.first_name}, {m.age}
+                    <p className="font-semibold flex items-center gap-1">
+                      <span>{m.first_name}, {m.age}</span>
+                      {m.verified && (
+                        <BadgeCheck className="h-4 w-4 text-sky-400 fill-sky-400/20" />
+                      )}
                     </p>
                     <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                       {m.department}

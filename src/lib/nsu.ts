@@ -12,6 +12,7 @@ export type DBProfile = {
   department: Department;
   major: string;
   photo_url: string;
+  photos: string[];
   free_slots: string[];
   location: LocationKey;
   ghost_from_depts: Department[];

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ImagePlus, Send, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, BadgeCheck, ImagePlus, Send, ShieldAlert, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ICEBREAKERS, type DBProfile } from "@/lib/nsu";
 import { supabase } from "@/integrations/supabase/client";

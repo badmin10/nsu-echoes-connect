@@ -59,6 +59,7 @@ export type Database = {
           major: string
           onboarding_complete: boolean
           photo_url: string
+          photos: string[]
           updated_at: string
           user_id: string | null
           verified: boolean
@@ -78,6 +79,7 @@ export type Database = {
           major?: string
           onboarding_complete?: boolean
           photo_url?: string
+          photos?: string[]
           updated_at?: string
           user_id?: string | null
           verified?: boolean
@@ -97,6 +99,7 @@ export type Database = {
           major?: string
           onboarding_complete?: boolean
           photo_url?: string
+          photos?: string[]
           updated_at?: string
           user_id?: string | null
           verified?: boolean

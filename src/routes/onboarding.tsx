@@ -16,7 +16,17 @@ import { Camera, Check, ImagePlus, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/onboarding")({
-  head: () => ({ meta: [{ title: "Get verified — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Create your profile — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Set up your verified NSUMatch profile: photos, academic info, NSU ID verification, and free-slot preferences.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: Onboarding,
 });
 

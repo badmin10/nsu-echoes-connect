@@ -127,7 +127,7 @@ function ProfilePage() {
       </section>
 
       <section className="rounded-2xl border bg-card p-4 space-y-3">
-        <Label className="text-base">🕒 Free slots</Label>
+        <h2 className="text-base font-medium">🕒 Free slots</h2>
         <p className="text-xs text-muted-foreground">
           We'll highlight mutual slots on your matches' cards.
         </p>

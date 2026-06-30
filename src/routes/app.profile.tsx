@@ -22,7 +22,17 @@ import { useMyProfile, useSession } from "@/lib/nsu-auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/profile")({
-  head: () => ({ meta: [{ title: "Your profile — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Your profile — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Manage your NSUMatch profile: campus check-in, free slots, Ghost Mode privacy, and dark theme.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: ProfilePage,
 });
 

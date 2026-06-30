@@ -9,7 +9,23 @@ import { ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
-    meta: [{ title: "Sign in — NSUMatch" }],
+    meta: [
+      { title: "Sign in or join — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Sign in or create your NSUMatch account with your @northsouth.edu email. Verified students only — passwords checked against known breaches.",
+      },
+      { property: "og:title", content: "Join NSUMatch — verified NSU students only" },
+      {
+        property: "og:description",
+        content:
+          "Create your NSUMatch account with your @northsouth.edu email. Verified students only.",
+      },
+      { property: "og:url", content: "https://nsu-echoes-connect.lovable.app/auth" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://nsu-echoes-connect.lovable.app/auth" }],
   }),
   component: AuthPage,
 });

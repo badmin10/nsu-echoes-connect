@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -16,12 +17,18 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as BlogBestAppsRouteImport } from './routes/blog.best-apps'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppMatchesRouteImport } from './routes/app.matches'
 import { Route as AppCrushRouteImport } from './routes/app.crush'
 import { Route as AppChatIdRouteImport } from './routes/app.chat.$id'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -57,6 +64,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const BlogBestAppsRoute = BlogBestAppsRouteImport.update({
+  id: '/blog/best-apps',
+  path: '/blog/best-apps',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -90,10 +102,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/crush': typeof AppCrushRoute
   '/app/matches': typeof AppMatchesRoute
   '/app/profile': typeof AppProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/best-apps': typeof BlogBestAppsRoute
   '/app/': typeof AppIndexRoute
   '/app/chat/$id': typeof AppChatIdRoute
 }
@@ -103,10 +117,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/crush': typeof AppCrushRoute
   '/app/matches': typeof AppMatchesRoute
   '/app/profile': typeof AppProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/best-apps': typeof BlogBestAppsRoute
   '/app': typeof AppIndexRoute
   '/app/chat/$id': typeof AppChatIdRoute
 }
@@ -118,10 +134,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/crush': typeof AppCrushRoute
   '/app/matches': typeof AppMatchesRoute
   '/app/profile': typeof AppProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/best-apps': typeof BlogBestAppsRoute
   '/app/': typeof AppIndexRoute
   '/app/chat/$id': typeof AppChatIdRoute
 }
@@ -134,10 +152,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/app/crush'
     | '/app/matches'
     | '/app/profile'
     | '/auth/callback'
+    | '/blog/best-apps'
     | '/app/'
     | '/app/chat/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -147,10 +167,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/app/crush'
     | '/app/matches'
     | '/app/profile'
     | '/auth/callback'
+    | '/blog/best-apps'
     | '/app'
     | '/app/chat/$id'
   id:
@@ -161,10 +183,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/app/crush'
     | '/app/matches'
     | '/app/profile'
     | '/auth/callback'
+    | '/blog/best-apps'
     | '/app/'
     | '/app/chat/$id'
   fileRoutesById: FileRoutesById
@@ -176,10 +200,19 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  BlogBestAppsRoute: typeof BlogBestAppsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -228,6 +261,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/blog/best-apps': {
+      id: '/blog/best-apps'
+      path: '/blog/best-apps'
+      fullPath: '/blog/best-apps'
+      preLoaderRoute: typeof BlogBestAppsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -302,6 +342,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  BlogBestAppsRoute: BlogBestAppsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

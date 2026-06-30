@@ -22,7 +22,17 @@ import { useMyProfile, useSession } from "@/lib/nsu-auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/profile")({
-  head: () => ({ meta: [{ title: "Your profile — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Your profile — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Manage your NSUMatch profile: campus check-in, free slots, Ghost Mode privacy, and dark theme.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: ProfilePage,
 });
 
@@ -72,7 +82,7 @@ function ProfilePage() {
   return (
     <div className="max-w-md mx-auto px-4 pt-6 space-y-6">
       <div className="flex items-center gap-4">
-        <img src={profile.photo_url} alt="" className="h-20 w-20 rounded-2xl object-cover" />
+        <img src={profile.photo_url} alt={`Profile photo of ${profile.first_name}`} className="h-20 w-20 rounded-2xl object-cover" />
         <div>
           <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-black">
@@ -98,7 +108,7 @@ function ProfilePage() {
       </section>
 
       <section className="rounded-2xl border bg-card p-4 space-y-3">
-        <Label className="text-base">📍 Meet me at...</Label>
+        <h2 className="text-base font-medium">📍 Meet me at...</h2>
         <Select
           value={profile.location}
           onValueChange={(v) => update({ location: v as LocationKey })}
@@ -117,7 +127,7 @@ function ProfilePage() {
       </section>
 
       <section className="rounded-2xl border bg-card p-4 space-y-3">
-        <Label className="text-base">🕒 Free slots</Label>
+        <h2 className="text-base font-medium">🕒 Free slots</h2>
         <p className="text-xs text-muted-foreground">
           We'll highlight mutual slots on your matches' cards.
         </p>
@@ -143,7 +153,7 @@ function ProfilePage() {
 
       <section className="rounded-2xl border bg-card p-4 space-y-3">
         <div>
-          <Label className="text-base">👻 Ghost Mode</Label>
+          <h2 className="text-base font-medium">👻 Ghost Mode</h2>
           <p className="text-xs text-muted-foreground">
             Hide your profile from selected departments (e.g., your own major or relatives on
             campus).

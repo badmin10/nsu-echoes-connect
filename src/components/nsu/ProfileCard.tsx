@@ -15,7 +15,7 @@ export function ProfileCard({
     <div className="relative h-full w-full rounded-3xl overflow-hidden bg-card shadow-xl">
       <img
         src={profile.photo_url}
-        alt={profile.first_name}
+        alt={`Profile photo of ${profile.first_name}`}
         className="absolute inset-0 h-full w-full object-cover pointer-events-none"
         draggable={false}
       />

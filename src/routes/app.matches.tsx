@@ -6,7 +6,17 @@ import { useMyProfile, useSession } from "@/lib/nsu-auth";
 import type { DBProfile } from "@/lib/nsu";
 
 export const Route = createFileRoute("/app/matches")({
-  head: () => ({ meta: [{ title: "Matches — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Matches — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Your mutual matches on NSUMatch — start a conversation with verified NSU students you've both liked.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: Matches,
 });
 
@@ -76,7 +86,7 @@ function Matches() {
                 params={{ id: m.id }}
                 className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-border hover:bg-accent transition"
               >
-                <img src={m.photo_url} alt="" className="h-14 w-14 rounded-xl object-cover" />
+                <img src={m.photo_url} alt={`Profile photo of ${m.first_name}`} className="h-14 w-14 rounded-xl object-cover" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold flex items-center gap-1">

@@ -1,0 +1,15 @@
+# NSUMatch
+
+> Campus-exclusive dating app for verified North South University (NSU) students. Match on free slots, campus check-ins, and shared classes — @northsouth.edu accounts only.
+
+NSUMatch is built for NSU's specific campus culture: ID-verified profiles, free-slot matching between classes, "Meet me at..." check-ins (Cafeteria, Open Plaza, Library), a private Crush List, Ghost Mode to hide from your own department, and a screenshot-guarded chat.
+
+## Pages
+
+- [Home](/): What NSUMatch is and how it works.
+- [Sign in or join](/auth): Create an account or sign in with your @northsouth.edu email.
+- [Best dating apps for NSU students](/blog/best-apps): How NSUMatch compares to Tinder U, UMatch, and other apps college students use.
+
+## Optional
+
+- [Sitemap](/sitemap.xml)

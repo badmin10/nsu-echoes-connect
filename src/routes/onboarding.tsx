@@ -16,7 +16,17 @@ import { Camera, Check, ImagePlus, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/onboarding")({
-  head: () => ({ meta: [{ title: "Get verified — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Create your profile — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Set up your verified NSUMatch profile: photos, academic info, NSU ID verification, and free-slot preferences.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: Onboarding,
 });
 
@@ -154,7 +164,8 @@ function Onboarding() {
             />
           ))}
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Step {step} of 4</p>
+        <h1 className="mt-4 text-2xl font-black tracking-tight">Create your NSUMatch profile</h1>
+        <p className="mt-1 text-xs text-muted-foreground">Step {step} of 4</p>
       </header>
 
       <main className="flex-1 px-6 py-6 max-w-md mx-auto w-full">
@@ -202,7 +213,7 @@ function Onboarding() {
                     key={p}
                     className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted"
                   >
-                    <img src={p} alt={`Photo ${idx + 1}`} className="h-full w-full object-cover" />
+                    <img src={p} alt={`Your gallery photo ${idx + 1} of ${photos.length}`} className="h-full w-full object-cover" />
                     {idx === 0 && (
                       <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
                         Main
@@ -354,7 +365,7 @@ function Onboarding() {
             </p>
             <div className="rounded-2xl border bg-card p-4 flex gap-3">
               {photos[0] && (
-                <img src={photos[0]} alt="" className="h-16 w-16 rounded-xl object-cover" />
+                <img src={photos[0]} alt="Your main profile photo preview" className="h-16 w-16 rounded-xl object-cover" />
               )}
               <div className="text-sm">
                 <p className="font-semibold">

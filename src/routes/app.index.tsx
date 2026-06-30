@@ -27,7 +27,17 @@ import { ProfileCard } from "@/components/nsu/ProfileCard";
 import { SwipeCard } from "@/components/nsu/SwipeCard";
 
 export const Route = createFileRoute("/app/")({
-  head: () => ({ meta: [{ title: "Discover — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Discover — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Swipe through verified NSU students. Filter by department, age, campus location, and shared free slots.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: Discover,
 });
 
@@ -158,7 +168,7 @@ function Discover() {
             className="h-10 w-10 rounded-full overflow-hidden border border-border"
             aria-label="Open profile"
           >
-            {me && <img src={me.photo_url} alt="" className="h-full w-full object-cover" />}
+            {me && <img src={me.photo_url} alt="Your profile photo" className="h-full w-full object-cover" />}
           </button>
         </div>
       </header>

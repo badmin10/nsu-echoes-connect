@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { DBProfile } from "@/lib/nsu";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — NSUMatch" }] }),
+  head: () => ({ meta: [{ title: "Admin — NSUMatch" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: Admin,
 });
 

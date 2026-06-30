@@ -10,12 +10,36 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Verified students of North South University only. Match on free slots, campus check-ins, and good vibes.",
+          "Campus-exclusive dating for verified North South University students. Match on free slots, campus check-ins, and good vibes — @northsouth.edu only.",
       },
       { property: "og:title", content: "NSUMatch — Dating, exclusively for NSU" },
       {
         property: "og:description",
-        content: "Verified NSU students only. Match, meet, and grab a cha.",
+        content:
+          "Verified NSU students only. Match on shared free slots, campus check-ins, and grab a cha together.",
+      },
+      { property: "og:url", content: "https://nsu-echoes-connect.lovable.app/" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "NSUMatch — Dating, exclusively for NSU" },
+      {
+        name: "twitter:description",
+        content:
+          "Verified NSU students only. Match on shared free slots and campus check-ins.",
+      },
+    ],
+    links: [{ rel: "canonical", href: "https://nsu-echoes-connect.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "NSUMatch",
+          url: "https://nsu-echoes-connect.lovable.app",
+          description:
+            "Campus-exclusive dating app for verified North South University students, built around free-slot matching and campus check-ins.",
+          areaServed: "North South University, Dhaka, Bangladesh",
+        }),
       },
     ],
   }),

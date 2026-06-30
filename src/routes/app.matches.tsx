@@ -6,7 +6,17 @@ import { useMyProfile, useSession } from "@/lib/nsu-auth";
 import type { DBProfile } from "@/lib/nsu";
 
 export const Route = createFileRoute("/app/matches")({
-  head: () => ({ meta: [{ title: "Matches — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Matches — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Your mutual matches on NSUMatch — start a conversation with verified NSU students you've both liked.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: Matches,
 });
 

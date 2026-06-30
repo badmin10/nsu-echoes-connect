@@ -150,7 +150,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_my_email: { Args: never; Returns: string }
       get_ultimate_matches: {
         Args: never
         Returns: {

@@ -153,7 +153,7 @@ function ProfilePage() {
 
       <section className="rounded-2xl border bg-card p-4 space-y-3">
         <div>
-          <Label className="text-base">👻 Ghost Mode</Label>
+          <h2 className="text-base font-medium">👻 Ghost Mode</h2>
           <p className="text-xs text-muted-foreground">
             Hide your profile from selected departments (e.g., your own major or relatives on
             campus).

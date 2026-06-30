@@ -164,7 +164,8 @@ function Onboarding() {
             />
           ))}
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Step {step} of 4</p>
+        <h1 className="mt-4 text-2xl font-black tracking-tight">Create your NSUMatch profile</h1>
+        <p className="mt-1 text-xs text-muted-foreground">Step {step} of 4</p>
       </header>
 
       <main className="flex-1 px-6 py-6 max-w-md mx-auto w-full">

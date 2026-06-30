@@ -365,7 +365,7 @@ function Onboarding() {
             </p>
             <div className="rounded-2xl border bg-card p-4 flex gap-3">
               {photos[0] && (
-                <img src={photos[0]} alt="" className="h-16 w-16 rounded-xl object-cover" />
+                <img src={photos[0]} alt="Your main profile photo preview" className="h-16 w-16 rounded-xl object-cover" />
               )}
               <div className="text-sm">
                 <p className="font-semibold">

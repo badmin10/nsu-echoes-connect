@@ -72,7 +72,7 @@ function ProfilePage() {
   return (
     <div className="max-w-md mx-auto px-4 pt-6 space-y-6">
       <div className="flex items-center gap-4">
-        <img src={profile.photo_url} alt="" className="h-20 w-20 rounded-2xl object-cover" />
+        <img src={profile.photo_url} alt={`Profile photo of ${profile.first_name}`} className="h-20 w-20 rounded-2xl object-cover" />
         <div>
           <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-black">

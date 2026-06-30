@@ -77,23 +77,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "NSU Connect is a campus-exclusive dating app for North South University students." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "NSU Connect is a campus-exclusive dating app for North South University students." },
+      { title: "NSUMatch — Dating for NSU Students" },
+      { name: "author", content: "NSUMatch" },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "NSU Connect is a campus-exclusive dating app for North South University students." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/03cbb25b-8cd3-4d67-9d0e-3b0da879948d/id-preview-444eede6--c947ae7a-02fb-4fa3-8a85-c6653d54aa90.lovable.app-1782774531370.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/03cbb25b-8cd3-4d67-9d0e-3b0da879948d/id-preview-444eede6--c947ae7a-02fb-4fa3-8a85-c6653d54aa90.lovable.app-1782774531370.png" },
+      { property: "og:site_name", content: "NSUMatch" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "NSUMatch",
+          url: "https://nsu-echoes-connect.lovable.app",
+          description:
+            "Campus-exclusive dating app for verified North South University students.",
+        }),
       },
     ],
   }),

@@ -158,7 +158,7 @@ function Discover() {
             className="h-10 w-10 rounded-full overflow-hidden border border-border"
             aria-label="Open profile"
           >
-            {me && <img src={me.photo_url} alt="" className="h-full w-full object-cover" />}
+            {me && <img src={me.photo_url} alt="Your profile photo" className="h-full w-full object-cover" />}
           </button>
         </div>
       </header>

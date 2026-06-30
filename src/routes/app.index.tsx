@@ -27,7 +27,17 @@ import { ProfileCard } from "@/components/nsu/ProfileCard";
 import { SwipeCard } from "@/components/nsu/SwipeCard";
 
 export const Route = createFileRoute("/app/")({
-  head: () => ({ meta: [{ title: "Discover — NSUMatch" }] }),
+  head: () => ({
+    meta: [
+      { title: "Discover — NSUMatch" },
+      {
+        name: "description",
+        content:
+          "Swipe through verified NSU students. Filter by department, age, campus location, and shared free slots.",
+      },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: Discover,
 });
 

@@ -108,7 +108,7 @@ function ProfilePage() {
       </section>
 
       <section className="rounded-2xl border bg-card p-4 space-y-3">
-        <Label className="text-base">📍 Meet me at...</Label>
+        <h2 className="text-base font-medium">📍 Meet me at...</h2>
         <Select
           value={profile.location}
           onValueChange={(v) => update({ location: v as LocationKey })}

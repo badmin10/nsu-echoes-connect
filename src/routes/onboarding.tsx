@@ -213,7 +213,7 @@ function Onboarding() {
                     key={p}
                     className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted"
                   >
-                    <img src={p} alt={`Photo ${idx + 1}`} className="h-full w-full object-cover" />
+                    <img src={p} alt={`Your gallery photo ${idx + 1} of ${photos.length}`} className="h-full w-full object-cover" />
                     {idx === 0 && (
                       <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
                         Main

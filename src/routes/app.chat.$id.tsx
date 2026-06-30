@@ -6,7 +6,7 @@ import { ICEBREAKERS, type DBProfile } from "@/lib/nsu";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/chat/$id")({
-  head: () => ({ meta: [{ title: "Chat — NSUMatch" }] }),
+  head: () => ({ meta: [{ title: "Chat — NSUMatch" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: Chat,
 });
 

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — NSUMatch" }] }),
+  head: () => ({ meta: [{ title: "Reset password — NSUMatch" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: ResetPassword,
 });
 

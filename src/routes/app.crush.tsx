@@ -8,7 +8,7 @@ import { useMyProfile, useSession } from "@/lib/nsu-auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/crush")({
-  head: () => ({ meta: [{ title: "Crush List — NSUMatch" }] }),
+  head: () => ({ meta: [{ title: "Crush List — NSUMatch" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: CrushList,
 });
 

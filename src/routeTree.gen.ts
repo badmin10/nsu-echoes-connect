@@ -17,6 +17,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as BlogBestAppsRouteImport } from './routes/blog.best-apps'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppMatchesRouteImport } from './routes/app.matches'
@@ -63,6 +64,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const BlogBestAppsRoute = BlogBestAppsRouteImport.update({
+  id: '/blog/best-apps',
+  path: '/blog/best-apps',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/app/matches': typeof AppMatchesRoute
   '/app/profile': typeof AppProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/best-apps': typeof BlogBestAppsRoute
   '/app/': typeof AppIndexRoute
   '/app/chat/$id': typeof AppChatIdRoute
 }
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/app/matches': typeof AppMatchesRoute
   '/app/profile': typeof AppProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/best-apps': typeof BlogBestAppsRoute
   '/app': typeof AppIndexRoute
   '/app/chat/$id': typeof AppChatIdRoute
 }
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/app/matches': typeof AppMatchesRoute
   '/app/profile': typeof AppProfileRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/best-apps': typeof BlogBestAppsRoute
   '/app/': typeof AppIndexRoute
   '/app/chat/$id': typeof AppChatIdRoute
 }
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/app/matches'
     | '/app/profile'
     | '/auth/callback'
+    | '/blog/best-apps'
     | '/app/'
     | '/app/chat/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/app/matches'
     | '/app/profile'
     | '/auth/callback'
+    | '/blog/best-apps'
     | '/app'
     | '/app/chat/$id'
   id:
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/app/matches'
     | '/app/profile'
     | '/auth/callback'
+    | '/blog/best-apps'
     | '/app/'
     | '/app/chat/$id'
   fileRoutesById: FileRoutesById
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  BlogBestAppsRoute: typeof BlogBestAppsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -248,6 +261,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/blog/best-apps': {
+      id: '/blog/best-apps'
+      path: '/blog/best-apps'
+      fullPath: '/blog/best-apps'
+      preLoaderRoute: typeof BlogBestAppsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -323,6 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  BlogBestAppsRoute: BlogBestAppsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

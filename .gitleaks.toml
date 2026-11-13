@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "ec-private-jwk"
+description = "Private EC JWK (including VAPID signing keys)"
+regex = '''"d"\s*:\s*"([A-Za-z0-9_-]{43})"'''
+secretGroup = 1
+keywords = ['"d"']
+
+[[allowlists]]
+description = "Generated dependencies and build artifacts (source and local env files are scanned)"
+paths = ['''(^|[\\/])(node_modules|\.output|\.tanstack|\.wrangler|test-results|playwright-report)([\\/]|$)''', '''(^|[\\/])audit-[^\\/]+\.(json|log)$''']

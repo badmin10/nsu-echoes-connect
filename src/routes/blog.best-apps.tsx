@@ -67,8 +67,8 @@ function BestApps() {
           <p className="mt-2">
             Tinder has the biggest pool and Tinder U adds a college filter, but Tinder U isn't
             officially supported in Bangladesh and the "U" badge isn't a real ID check. Expect a
-            wide radius, lots of off-campus profiles, and no way to filter for shared free
-            slots or department.
+            wide radius, lots of off-campus profiles, and no way to filter for shared free slots or
+            department.
           </p>
         </section>
 
@@ -95,13 +95,13 @@ function BestApps() {
           <h2 className="text-xl font-bold">NSUMatch</h2>
           <p className="mt-2">
             NSUMatch is exclusive to verified <code>@northsouth.edu</code> emails with a manual
-            Student ID check, so every profile you swipe is a real NSU student. It adds a few
-            things mainstream apps can't:
+            Student ID check, so every profile you swipe is a real NSU student. It adds a few things
+            mainstream apps can't:
           </p>
           <ul className="mt-3 list-disc list-inside space-y-1">
             <li>
-              <strong>Free-slot matcher</strong> — pick the times you're free between classes
-              (e.g. "ST 09:40 AM") and see who shares them.
+              <strong>Free-slot matcher</strong> — pick the times you're free between classes (e.g.
+              "ST 09:40 AM") and see who shares them.
             </li>
             <li>
               <strong>"Meet me at..." check-ins</strong> — show up as "Grabbing coffee at the

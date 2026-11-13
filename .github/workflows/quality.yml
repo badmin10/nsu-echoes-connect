@@ -1,0 +1,50 @@
+name: Quality and security
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run audit:dependencies
+      - run: npx --yes deno@2.9.6 check --config supabase/functions/deno.json --frozen supabase/functions/notify/index.ts
+      - run: node scripts/edge-sbom.mjs
+      - name: Scan all lockfiles with OSV
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -fsSLO https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_linux_amd64
+          curl -fsSLO https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_SHA256SUMS
+          sha256sum --ignore-missing -c osv-scanner_SHA256SUMS
+          chmod +x osv-scanner_linux_amd64
+          ./osv-scanner_linux_amd64 scan source --lockfile "$GITHUB_WORKSPACE/package-lock.json" --lockfile "$GITHUB_WORKSPACE/bun.lock" --lockfile "$GITHUB_WORKSPACE/audit-edge.cdx.json"
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results/
+          retention-days: 7

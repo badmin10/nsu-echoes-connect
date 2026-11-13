@@ -1,5 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import {
+  ArrowRight,
+  CalendarDays,
+  GraduationCap,
+  Heart,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,8 +31,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:title", content: "NSUMatch — Dating, exclusively for NSU" },
       {
         name: "twitter:description",
-        content:
-          "Verified NSU students only. Match on shared free slots and campus check-ins.",
+        content: "Verified NSU students only. Match on shared free slots and campus check-ins.",
       },
     ],
     links: [{ rel: "canonical", href: "https://nsu-echoes-connect.lovable.app/" }],
@@ -48,68 +55,125 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/app" });
-      else setChecking(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (data.session) navigate({ to: "/app" });
+      })
+      .catch(() => {
+        /* The public page remains available when auth is offline. */
+      });
   }, [navigate]);
 
-  if (checking) {
-    return <div className="min-h-screen grid place-items-center text-sm opacity-70">Loading…</div>;
-  }
-
   return (
-    <div className="min-h-screen nsu-gradient text-navy-foreground flex flex-col">
-      <header className="px-6 pt-8 flex items-center justify-between">
+    <div className="min-h-dvh nsu-gradient text-navy-foreground flex flex-col pt-safe pb-safe">
+      <header className="px-6 py-6 sm:px-10 flex items-center justify-between w-full max-w-6xl mx-auto">
         <div className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-xl bg-gold text-gold-foreground grid place-items-center font-black">
             N
           </div>
           <span className="font-semibold tracking-tight text-lg">NSUMatch</span>
         </div>
-        <Link to="/admin" className="text-xs opacity-70 hover:opacity-100">
-          Admin
+        <Link
+          to="/auth"
+          search={{ mode: "signin" }}
+          className="rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 transition-colors"
+        >
+          Sign in
         </Link>
       </header>
 
-      <main className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
-        <h1 className="text-5xl font-black leading-[1.05] tracking-tight">
-          Dating, <span className="text-gold">exclusively</span> for NSU.
-        </h1>
-        <p className="mt-4 text-base opacity-85 leading-relaxed">
-          Verified students only. Skip random apps — find someone who actually shares your free slot
-          and your favorite tong.
-        </p>
+      <main className="flex-1 grid items-center gap-12 px-6 py-10 sm:px-10 sm:py-16 max-w-6xl mx-auto w-full lg:grid-cols-[1.1fr_1fr] lg:gap-20">
+        <div>
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-2 text-xs font-semibold text-gold">
+            <GraduationCap className="h-4 w-4" aria-hidden /> Made for your campus
+          </p>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight max-w-xl">
+            Dating, <span className="text-gold">exclusively</span> for NSU.
+          </h1>
+          <p className="mt-5 text-base sm:text-lg text-white/80 leading-relaxed max-w-md">
+            Meet someone who shares your free slot, your favorite tong, and a little of your
+            everyday life.
+          </p>
 
-        <div className="mt-8 flex flex-col gap-3">
-          <Button
-            asChild
-            className="h-12 bg-gold text-gold-foreground hover:bg-gold/90 gold-glow font-semibold"
-          >
-            <Link to="/auth">Create your account</Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="h-12 bg-white/10 border-white/30 text-white hover:bg-white/20"
-          >
-            <Link to="/auth">I already have an account</Link>
-          </Button>
+          <div className="mt-8 flex flex-col gap-3">
+            <Button
+              asChild
+              className="h-12 bg-gold text-gold-foreground hover:bg-gold/90 gold-glow font-semibold"
+            >
+              <Link to="/auth">
+                Find your campus connection <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="h-12 bg-white/10 border-white/30 text-white hover:bg-white/20"
+            >
+              <Link to="/auth" search={{ mode: "signin" }}>
+                I already have an account
+              </Link>
+            </Button>
+          </div>
+
+          <p className="mt-4 flex items-center gap-2 text-xs text-white/75">
+            <ShieldCheck className="h-4 w-4 text-gold" aria-hidden /> NSU email required. Student
+            IDs reviewed privately.
+          </p>
         </div>
 
-        <ul className="mt-10 space-y-2 text-sm opacity-90">
-          <li>✓ @northsouth.edu verification + email confirmation</li>
-          <li>✓ Free-slot matcher, campus check-ins, Crush List</li>
-          <li>✓ Ghost Mode to hide from your own department</li>
-          <li>✓ Screenshot guard in chats — privacy by default</li>
-        </ul>
+        <section aria-labelledby="campus-features" className="relative">
+          <div className="mb-5 flex items-center gap-2 text-gold">
+            <Sparkles className="h-5 w-5" aria-hidden />
+            <h2 id="campus-features" className="text-lg font-bold">
+              A little closer to your kind of person.
+            </h2>
+          </div>
+          <div className="mb-4 rounded-3xl border border-gold/25 bg-white/10 p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="rounded-full bg-gold px-3 py-1 text-xs font-bold text-gold-foreground">
+                Between classes
+              </span>
+              <Heart className="h-5 w-5 text-gold" aria-hidden />
+            </div>
+            <p className="mt-6 text-2xl font-bold tracking-tight">Same campus. Shared moments.</p>
+            <p className="mt-2 text-sm leading-relaxed text-white/75">
+              Turn a free period into a coffee, a conversation, or something worth showing up for.
+            </p>
+            <div className="mt-5 flex items-center gap-2 border-t border-white/15 pt-4 text-xs text-white/80">
+              <CalendarDays className="h-4 w-4 text-gold" aria-hidden /> Connections that fit your
+              schedule
+            </div>
+          </div>
+          <ul className="grid grid-cols-2 gap-3 text-sm">
+            {[
+              ["🎓", "@northsouth.edu only", "Every account is a verified NSU email"],
+              ["🕒", "Free-slot matching", "See who's free between classes with you"],
+              ["💛", "Secret Crush List", "Matches only if it's mutual"],
+              ["👻", "Ghost Mode", "Hide from your own department"],
+            ].map(([icon, title, body]) => (
+              <li
+                key={title}
+                className="rounded-2xl bg-white/10 border border-white/10 p-3.5 backdrop-blur-sm"
+              >
+                <span className="text-xl" aria-hidden>
+                  {icon}
+                </span>
+                <p className="mt-1.5 font-semibold leading-tight">{title}</p>
+                <p className="mt-0.5 text-xs text-white/70 leading-snug">{body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
       </main>
 
-      <footer className="px-6 pb-6 text-center text-xs opacity-60">
-        Not affiliated with North South University. Student-built MVP.
+      <footer className="px-6 py-6 text-center text-xs text-white/70">
+        <p>Not affiliated with North South University. Student-built MVP.</p>
+        <Link to="/admin" className="mt-3 inline-block rounded px-2 py-1 hover:text-white">
+          Admin sign-in
+        </Link>
       </footer>
     </div>
   );

@@ -6,11 +6,15 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { THEME_INIT_SCRIPT } from "../lib/nsu-auth";
+import { Toaster } from "@/components/ui/sonner";
+import { registerServiceWorker } from "@/lib/push";
 
 function NotFoundComponent() {
   return (
@@ -34,7 +38,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -76,7 +80,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "viewport",
+        // viewport-fit=cover → we own the notch/home-bar area (handled with safe-area insets)
+        // interactive-widget → Android Chrome shrinks the layout when the keyboard opens
+        content:
+          "width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content",
+      },
+      { name: "theme-color", content: "#141b3a", media: "(prefers-color-scheme: dark)" },
+      { name: "theme-color", content: "#f7f8fc", media: "(prefers-color-scheme: light)" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "NSUMatch" },
+      { name: "format-detection", content: "telephone=no" },
       { title: "NSUMatch — Dating for NSU Students" },
       { name: "author", content: "NSUMatch" },
       { property: "og:type", content: "website" },
@@ -88,8 +105,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
     scripts: [
+      // Apply saved/system dark mode before first paint (no flash).
+      { children: THEME_INIT_SCRIPT },
       {
         type: "application/ld+json",
         children: JSON.stringify({
@@ -97,8 +119,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@type": "WebSite",
           name: "NSUMatch",
           url: "https://nsu-echoes-connect.lovable.app",
-          description:
-            "Campus-exclusive dating app for verified North South University students.",
+          description: "Campus-exclusive dating app for verified North South University students.",
         }),
       },
     ],
@@ -111,7 +132,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -126,10 +147,21 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Service worker = push notifications + "Add to Home Screen" install.
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster
+        position="top-center"
+        offset={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
+        mobileOffset={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
+        toastOptions={{ className: "rounded-2xl" }}
+      />
     </QueryClientProvider>
   );
 }

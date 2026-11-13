@@ -46,7 +46,7 @@
   --card-foreground: oklch(0.18 0.05 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.05 260);
-  --primary: oklch(0.25 0.09 260);            /* NSU navy */
+  --primary: oklch(0.25 0.09 260); /* NSU navy */
   --primary-foreground: oklch(0.985 0.005 250);
   --secondary: oklch(0.95 0.015 250);
   --secondary-foreground: oklch(0.25 0.09 260);
@@ -59,7 +59,7 @@
   --border: oklch(0.9 0.015 255);
   --input: oklch(0.9 0.015 255);
   --ring: oklch(0.78 0.16 85);
-  --gold: oklch(0.82 0.17 88);                /* electric gold */
+  --gold: oklch(0.82 0.17 88); /* electric gold */
   --gold-foreground: oklch(0.2 0.05 260);
   --navy: oklch(0.22 0.08 260);
   --navy-foreground: oklch(0.985 0.005 250);
@@ -72,7 +72,7 @@
   --card-foreground: oklch(0.97 0.01 250);
   --popover: oklch(0.22 0.06 262);
   --popover-foreground: oklch(0.97 0.01 250);
-  --primary: oklch(0.82 0.17 88);             /* gold becomes primary in dark */
+  --primary: oklch(0.82 0.17 88); /* gold becomes primary in dark */
   --primary-foreground: oklch(0.18 0.06 260);
   --secondary: oklch(0.27 0.06 262);
   --secondary-foreground: oklch(0.97 0.01 250);
@@ -92,18 +92,155 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { height: 100%; }
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    /* stop pull-to-refresh / rubber-banding from fighting the swipe deck */
+    overscroll-behavior-y: none;
+  }
+  /* remove the 300ms double-tap delay on mobile */
+  a,
+  button,
+  [role="button"],
+  label,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+  img {
+    -webkit-user-drag: none;
+  }
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 3px;
+  }
+  /* iOS zooms into inputs < 16px; keep form controls at 16px on phones */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Safe-area helpers for notches, Dynamic Island and the Android gesture bar */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+@utility pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Full app height that also tracks the on-screen keyboard (set by AppLayout) */
+@utility h-app {
+  height: var(--app-height, 100dvh);
+}
+@utility min-h-app {
+  min-height: var(--app-height, 100dvh);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes nsu-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes nsu-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes nsu-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--gold) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 18px transparent;
+  }
+}
+@keyframes nsu-msg-in {
+  from {
+    transform: translateY(6px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@utility animate-pop {
+  animation: nsu-pop 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@utility animate-float {
+  animation: nsu-float 3s ease-in-out infinite;
+}
+@utility animate-pulse-ring {
+  animation: nsu-pulse-ring 1.6s ease-out infinite;
+}
+@utility animate-msg-in {
+  animation: nsu-msg-in 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
 @utility nsu-gradient {
-  background-image: linear-gradient(135deg, var(--navy), color-mix(in oklab, var(--navy) 70%, var(--gold)));
+  background-image: linear-gradient(
+    135deg,
+    var(--navy),
+    color-mix(in oklab, var(--navy) 70%, var(--gold))
+  );
 }
 
 @utility gold-glow {

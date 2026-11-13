@@ -1,19 +1,14 @@
+import { ProfilePhoto } from "@/components/nsu/ProfilePhoto";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ALL_SLOTS, DEPARTMENTS, type Department } from "@/lib/nsu";
-import { Camera, Check, ImagePlus, Loader2, X } from "lucide-react";
+import { Camera, Check, ImagePlus, Loader2, Lock, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadIdCard } from "@/lib/verification";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -47,7 +42,27 @@ function Onboarding() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  const [idUploaded, setIdUploaded] = useState(false);
+  const [idPath, setIdPath] = useState<string | null>(null);
+  const [idPreview, setIdPreview] = useState<string | null>(null);
+  const [idUploading, setIdUploading] = useState(false);
+  const [idError, setIdError] = useState<string | null>(null);
+  const idUploaded = !!idPath;
+
+  const handleIdFile = async (file: File | undefined) => {
+    if (!file || !userId) return;
+    setIdError(null);
+    setIdUploading(true);
+    if (idPreview) URL.revokeObjectURL(idPreview);
+    setIdPreview(URL.createObjectURL(file));
+    const { path, error: upErr } = await uploadIdCard(userId, file);
+    setIdUploading(false);
+    if (upErr || !path) {
+      setIdError(upErr ?? "Upload failed. Try again.");
+      setIdPath(null);
+      return;
+    }
+    setIdPath(path);
+  };
   const [slots, setSlots] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,10 +106,7 @@ function Onboarding() {
         setPhotoError(upErr.message);
         continue;
       }
-      const { data: signed } = await supabase.storage
-        .from("profile-photos")
-        .createSignedUrl(path, 60 * 60 * 24 * 365);
-      if (signed?.signedUrl) uploaded.push(signed.signedUrl);
+      uploaded.push(path);
     }
     setPhotos((p) => [...p, ...uploaded]);
     setUploading(false);
@@ -119,7 +131,10 @@ function Onboarding() {
         photos,
         free_slots: slots,
         id_card_uploaded: idUploaded,
-        verified: idUploaded,
+        id_card_path: idPath,
+        // Goes into the admin review queue. The blue badge is granted only by an admin
+        // (enforced in the database), never on upload.
+        verification_status: idUploaded ? "pending" : "none",
         onboarding_complete: true,
       })
       .eq("user_id", userId);
@@ -148,49 +163,84 @@ function Onboarding() {
     setSlots((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-6 pt-6 max-w-md mx-auto w-full">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg nsu-gradient text-navy-foreground grid place-items-center font-black">
-            N
-          </div>
-          <span className="font-semibold">NSUMatch</span>
-        </div>
-        <div className="mt-6 flex gap-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-muted"}`}
-            />
-          ))}
-        </div>
-        <h1 className="mt-4 text-2xl font-black tracking-tight">Create your NSUMatch profile</h1>
-        <p className="mt-1 text-xs text-muted-foreground">Step {step} of 4</p>
-      </header>
-
-      <main className="flex-1 px-6 py-6 max-w-md mx-auto w-full">
-        {step === 1 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold">Your basics</h2>
-            <div>
-              <Label htmlFor="firstName">First name</Label>
-              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+    <div className="min-h-app bg-background flex flex-col pt-safe">
+      <header className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl px-5 pt-4 pb-3 max-w-md mx-auto w-full">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg nsu-gradient text-navy-foreground grid place-items-center font-black">
+              N
             </div>
-            <div>
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                inputMode="numeric"
-                value={age}
-                onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))}
+            <span className="font-semibold">NSUMatch</span>
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">Step {step} of 4</span>
+        </div>
+        <div
+          className="mt-4 flex gap-1.5"
+          role="progressbar"
+          aria-valuemin={1}
+          aria-valuemax={4}
+          aria-valuenow={step}
+        >
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full bg-primary transition-all duration-500 ${i <= step ? "w-full" : "w-0"}`}
               />
             </div>
+          ))}
+        </div>
+      </header>
+
+      <main key={step} className="flex-1 px-5 py-4 max-w-md mx-auto w-full animate-msg-in">
+        {step === 1 && (
+          <section className="space-y-5">
             <div>
-              <Label htmlFor="bio">Short bio</Label>
+              <h1 className="text-3xl font-black tracking-tight">Let's make your profile</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Great photos and a real bio get way more matches.
+              </p>
+            </div>
+            <div className="grid grid-cols-[1fr_96px] gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="firstName">First name</Label>
+                <Input
+                  id="firstName"
+                  autoComplete="given-name"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
+                  className="h-12 rounded-xl"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={2}
+                  enterKeyHint="next"
+                  className="h-12 rounded-xl"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))}
+                />
+              </div>
+            </div>
+            {age !== "" && Number(age) < 17 && (
+              <p className="-mt-3 text-xs text-destructive">You must be 17 or older.</p>
+            )}
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between">
+                <Label htmlFor="bio">Short bio</Label>
+                <span className="text-xs text-muted-foreground">{bio.length}/300</span>
+              </div>
               <Textarea
                 id="bio"
                 rows={3}
-                placeholder="What's your vibe on campus?"
+                maxLength={300}
+                className="rounded-xl"
+                placeholder="e.g. CSE junior, library 3rd floor regular, will trade notes for fuchka."
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
               />
@@ -205,27 +255,41 @@ function Onboarding() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Upload {MIN_PHOTOS}–{MAX_PHOTOS} photos from your gallery. The first photo is your main one.
+                Upload {MIN_PHOTOS}–{MAX_PHOTOS} photos from your gallery. The first photo is your
+                main one.
               </p>
               <div className="grid grid-cols-3 gap-2 mt-3">
                 {photos.map((p, idx) => (
                   <div
                     key={p}
-                    className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted"
+                    className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted"
                   >
-                    <img src={p} alt={`Your gallery photo ${idx + 1} of ${photos.length}`} className="h-full w-full object-cover" />
-                    {idx === 0 && (
-                      <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
+                    <ProfilePhoto
+                      src={p}
+                      alt={`Your gallery photo ${idx + 1} of ${photos.length}`}
+                      className="h-full w-full object-cover"
+                    />
+                    {idx === 0 ? (
+                      <span className="absolute bottom-1.5 left-1.5 text-[10px] font-bold bg-gold text-gold-foreground px-2 py-0.5 rounded-full">
                         Main
                       </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setPhotos((list) => [p, ...list.filter((u) => u !== p)])}
+                        className="absolute bottom-1 left-1 h-8 px-2 rounded-full bg-black/60 text-white text-[10px] font-semibold"
+                        aria-label="Make this your main photo"
+                      >
+                        Set main
+                      </button>
                     )}
                     <button
                       type="button"
                       onClick={() => removePhoto(p)}
-                      className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/70 text-white grid place-items-center"
+                      className="absolute top-1 right-1 h-8 w-8 rounded-full bg-black/60 text-white grid place-items-center active:scale-90"
                       aria-label="Remove photo"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
@@ -234,7 +298,7 @@ function Onboarding() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="aspect-square rounded-lg border-2 border-dashed border-border bg-muted/40 grid place-items-center text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+                    className="aspect-[3/4] rounded-2xl border-2 border-dashed border-border bg-muted/40 grid place-items-center text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
                   >
                     {uploading ? (
                       <Loader2 className="h-6 w-6 animate-spin" />
@@ -264,27 +328,47 @@ function Onboarding() {
         )}
 
         {step === 2 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold">Academic info</h2>
+          <section className="space-y-5">
             <div>
-              <Label>Department</Label>
-              <Select value={department} onValueChange={(v) => setDepartment(v as Department)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose your school" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEPARTMENTS.map((d) => (
-                    <SelectItem key={d.value} value={d.value}>
-                      {d.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h1 className="text-3xl font-black tracking-tight">Campus life</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Helps you find people you actually cross paths with.
+              </p>
             </div>
-            <div>
+            <div className="space-y-2">
+              <Label>Your school</Label>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup">
+                {DEPARTMENTS.map((d) => {
+                  const on = department === d.value;
+                  return (
+                    <button
+                      key={d.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => setDepartment(d.value)}
+                      className={`rounded-2xl border p-3 text-left transition active:scale-[0.97] ${
+                        on
+                          ? "border-primary bg-primary/10 ring-1 ring-primary"
+                          : "border-border bg-card"
+                      }`}
+                    >
+                      <span className="block font-black">{d.short}</span>
+                      <span className="block text-[11px] leading-tight text-muted-foreground mt-0.5">
+                        {d.label.split(" — ")[1]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="major">Major</Label>
               <Input
                 id="major"
+                autoCapitalize="words"
+                enterKeyHint="done"
+                className="h-12 rounded-xl"
                 placeholder="e.g., Computer Science"
                 value={major}
                 onChange={(e) => setMajor(e.target.value)}
@@ -292,7 +376,7 @@ function Onboarding() {
             </div>
             <div>
               <Label>Free slots (optional)</Label>
-              <p className="text-xs text-muted-foreground mb-2">
+              <p className="text-xs text-muted-foreground mt-1 mb-2">
                 Pick the times you usually have free between classes.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -300,8 +384,9 @@ function Onboarding() {
                   <button
                     key={s}
                     type="button"
+                    aria-pressed={slots.includes(s)}
                     onClick={() => toggleSlot(s)}
-                    className={`text-xs px-3 py-1.5 rounded-full border ${
+                    className={`h-10 text-sm px-4 rounded-full border transition active:scale-95 ${
                       slots.includes(s)
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-card text-foreground border-border"
@@ -317,55 +402,92 @@ function Onboarding() {
 
         {step === 3 && (
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">Verify your NSU ID</h2>
+            <h1 className="text-3xl font-black tracking-tight">Verify your NSU ID</h1>
             <p className="text-sm text-muted-foreground">
               For privacy, you can cover your Student ID number with your thumb. We only cross-check
               your <span className="font-medium text-foreground">Name and Photo</span>.
             </p>
-            <label className="block">
-              <div
-                className={`aspect-[4/3] rounded-2xl border-2 border-dashed grid place-items-center cursor-pointer transition-colors ${
-                  idUploaded ? "border-primary bg-primary/5" : "border-border bg-muted/40"
-                }`}
-              >
-                {idUploaded ? (
-                  <div className="text-center">
-                    <Check className="mx-auto h-10 w-10 text-primary" />
-                    <p className="mt-2 text-sm font-medium">ID uploaded — awaiting review</p>
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground">
-                    <Camera className="mx-auto h-10 w-10" />
-                    <p className="mt-2 text-sm">Tap to upload a photo of your Student ID</p>
-                  </div>
-                )}
+            <div
+              className={`relative aspect-[4/3] rounded-2xl border-2 border-dashed overflow-hidden grid place-items-center transition-colors ${
+                idUploaded ? "border-primary bg-primary/5" : "border-border bg-muted/40"
+              }`}
+            >
+              {idPreview ? (
+                <img
+                  src={idPreview}
+                  alt="Your student ID"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="text-center text-muted-foreground px-6">
+                  <Camera className="mx-auto h-10 w-10" />
+                  <p className="mt-2 text-sm">
+                    Take a clear photo of the front of your NSU ID card
+                  </p>
+                </div>
+              )}
+              {idUploading && (
+                <div className="absolute inset-0 bg-background/70 grid place-items-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
+              {idUploaded && !idUploading && (
+                <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold">
+                  <Check className="h-3.5 w-3.5" /> Uploaded securely
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="h-12 rounded-full bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition">
+                <Camera className="h-4 w-4" /> {idPreview ? "Retake" : "Take photo"}
                 <input
                   type="file"
                   accept="image/*"
                   capture="environment"
                   className="hidden"
-                  onChange={() => setIdUploaded(true)}
+                  disabled={idUploading}
+                  onChange={(e) => {
+                    handleIdFile(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
                 />
-              </div>
-            </label>
-            {!idUploaded && (
-              <Button variant="outline" className="w-full" onClick={() => setIdUploaded(true)}>
-                Skip camera, simulate upload
-              </Button>
-            )}
+              </label>
+              <label className="h-12 rounded-full border border-border bg-card font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition">
+                <ImagePlus className="h-4 w-4" /> From gallery
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={idUploading}
+                  onChange={(e) => {
+                    handleIdFile(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            {idError && <p className="text-sm text-destructive">{idError}</p>}
+            <p className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              Your ID is stored privately. Only NSUMatch admins can see it, and only to verify you.
+            </p>
           </section>
         )}
 
         {step === 4 && (
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">You're all set 🎉</h2>
+            <h1 className="text-3xl font-black tracking-tight">You're all set 🎉</h1>
             <p className="text-sm text-muted-foreground">
               We'll cross-check your ID with your profile. Once approved by an admin, you'll get the
               blue verified badge.
             </p>
             <div className="rounded-2xl border bg-card p-4 flex gap-3">
               {photos[0] && (
-                <img src={photos[0]} alt="Your main profile photo preview" className="h-16 w-16 rounded-xl object-cover" />
+                <ProfilePhoto
+                  src={photos[0]}
+                  alt="Your main profile photo preview"
+                  className="h-16 w-16 rounded-xl object-cover"
+                />
               )}
               <div className="text-sm">
                 <p className="font-semibold">
@@ -382,25 +504,42 @@ function Onboarding() {
         )}
       </main>
 
-      <footer className="px-6 pb-6 max-w-md mx-auto w-full flex gap-3">
-        {step > 1 && (
-          <Button variant="outline" className="flex-1" onClick={() => setStep(step - 1)}>
-            Back
-          </Button>
-        )}
-        {step < 4 ? (
-          <Button className="flex-1" disabled={!canNext()} onClick={() => setStep(step + 1)}>
-            Continue
-          </Button>
-        ) : (
-          <Button
-            className="flex-1 bg-gold text-gold-foreground hover:bg-gold/90"
-            onClick={finish}
-            disabled={saving}
-          >
-            {saving ? "Saving…" : "Enter NSUMatch"}
-          </Button>
-        )}
+      <footer className="sticky bottom-0 z-10 bg-background/90 backdrop-blur-xl border-t border-border">
+        <div className="px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] max-w-md mx-auto w-full flex gap-3">
+          {step > 1 && (
+            <Button
+              variant="outline"
+              className="h-12 rounded-full flex-1"
+              onClick={() => {
+                setStep(step - 1);
+                window.scrollTo({ top: 0 });
+              }}
+            >
+              Back
+            </Button>
+          )}
+          {step < 4 ? (
+            <Button
+              className="h-12 rounded-full flex-[2] font-semibold"
+              disabled={!canNext()}
+              onClick={() => {
+                setStep(step + 1);
+                window.scrollTo({ top: 0 });
+              }}
+            >
+              Continue
+            </Button>
+          ) : (
+            <Button
+              className="h-12 rounded-full flex-[2] font-semibold bg-gold text-gold-foreground hover:bg-gold/90 gold-glow"
+              onClick={finish}
+              disabled={saving}
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {saving ? "Saving…" : "Enter NSUMatch"}
+            </Button>
+          )}
+        </div>
       </footer>
     </div>
   );

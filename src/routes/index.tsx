@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { SITE_URL } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/")({
         content:
           "Verified NSU students only. Match on shared free slots, campus check-ins, and grab a cha together.",
       },
-      { property: "og:url", content: "https://nsu-echoes-connect.lovable.app/" },
+      { property: "og:url", content: `${SITE_URL}/` },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "NSUMatch — Dating, exclusively for NSU" },
       {
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/")({
         content: "Verified NSU students only. Match on shared free slots and campus check-ins.",
       },
     ],
-    links: [{ rel: "canonical", href: "https://nsu-echoes-connect.lovable.app/" }],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
     scripts: [
       {
         type: "application/ld+json",
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "NSUMatch",
-          url: "https://nsu-echoes-connect.lovable.app",
+          url: SITE_URL,
           description:
             "Campus-exclusive dating app for verified North South University students, built around free-slot matching and campus check-ins.",
           areaServed: "North South University, Dhaka, Bangladesh",

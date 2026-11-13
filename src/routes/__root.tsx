@@ -11,7 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SITE_URL } from "@/lib/site";
 import { THEME_INIT_SCRIPT } from "../lib/nsu-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { registerServiceWorker } from "@/lib/push";
@@ -41,9 +41,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -118,7 +115,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "NSUMatch",
-          url: "https://nsu-echoes-connect.lovable.app",
+          url: SITE_URL,
           description: "Campus-exclusive dating app for verified North South University students.",
         }),
       },

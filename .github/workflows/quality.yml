@@ -38,7 +38,7 @@ jobs:
           curl -fsSLO https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_SHA256SUMS
           sha256sum --ignore-missing -c osv-scanner_SHA256SUMS
           chmod +x osv-scanner_linux_amd64
-          ./osv-scanner_linux_amd64 scan source --lockfile "$GITHUB_WORKSPACE/package-lock.json" --lockfile "$GITHUB_WORKSPACE/bun.lock" --lockfile "$GITHUB_WORKSPACE/audit-edge.cdx.json"
+          ./osv-scanner_linux_amd64 scan source --lockfile "$GITHUB_WORKSPACE/package-lock.json" --lockfile "$GITHUB_WORKSPACE/audit-edge.cdx.json"
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

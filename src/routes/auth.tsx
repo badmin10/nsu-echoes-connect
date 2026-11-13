@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NSU_EMAIL_REGEX } from "@/lib/nsu";
 import { supabase } from "@/integrations/supabase/client";
+import { SITE_URL } from "@/lib/site";
 import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -25,10 +26,10 @@ export const Route = createFileRoute("/auth")({
         content:
           "Create your NSUMatch account with your @northsouth.edu email. Verified students only.",
       },
-      { property: "og:url", content: "https://nsu-echoes-connect.lovable.app/auth" },
+      { property: "og:url", content: `${SITE_URL}/auth` },
       { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "canonical", href: "https://nsu-echoes-connect.lovable.app/auth" }],
+    links: [{ rel: "canonical", href: `${SITE_URL}/auth` }],
   }),
   component: AuthPage,
 });

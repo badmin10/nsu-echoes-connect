@@ -1,4 +1,4 @@
-// Shared constants and types for NSUMatch. Data lives in Lovable Cloud now.
+// Shared constants and types for NSUMatch. Data lives in Supabase.
 export type Department = "SBE" | "ECE" | "SHSS" | "SEPS";
 export type LocationKey = "none" | "cafe" | "plaza" | "library";
 

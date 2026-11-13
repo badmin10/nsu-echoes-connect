@@ -5,7 +5,7 @@
 // message / are actually matched), then the service role looks up the other
 // person's devices and pushes to each one.
 //
-// Secrets required (Lovable Cloud → Secrets):
+// Secrets required (Supabase → Edge Functions → Secrets):
 //   VAPID_PRIVATE_KEY  JSON JWK  {"kty":"EC","crv":"P-256","x":..,"y":..,"d":..}
 //   VAPID_SUBJECT      mailto:you@northsouth.edu
 // SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY are provided automatically.

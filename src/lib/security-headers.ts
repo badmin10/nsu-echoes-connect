@@ -5,10 +5,10 @@ export function withSecurityHeaders(response: Response, request: Request): Respo
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   // Inline hydration/theme scripts are required by TanStack Start. Restrict
-  // embedding and plugin content without breaking those scripts or Lovable.
+  // embedding and plugin content without breaking those scripts.
   headers.set(
     "Content-Security-Policy",
-    "object-src 'none'; base-uri 'self'; frame-ancestors 'self' https://lovable.dev https://*.lovable.dev",
+    "object-src 'none'; base-uri 'self'; frame-ancestors 'self'",
   );
   const url = new URL(request.url);
   if (url.protocol === "https:") {

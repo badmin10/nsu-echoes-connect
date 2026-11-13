@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SITE_URL } from "@/lib/site";
 
-const URL = "https://nsu-echoes-connect.lovable.app/blog/best-apps";
+const URL = `${SITE_URL}/blog/best-apps`;
 const TITLE = "The Best Dating Apps for NSU Students (2026)";
 const DESCRIPTION =
   "Comparing the dating apps NSU students actually use — Tinder U, UMatch, Bumble, and NSUMatch — for safety, campus fit, and finding someone nearby.";
